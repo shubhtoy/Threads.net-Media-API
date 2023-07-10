@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>Threads.net, Media Downloader</title>
+    <style>
+        body {
+            background-color: #000;
+            color: #fff;
+            font-family: Arial, sans-serif;
+        }
+
+        h1 {
+            text-align: center;
+            margin-top: 50px;
+            font-size: 32px;
+        }
+
+        form {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            margin-top: 20px;
+        }
+
+        input[type="text"] {
+            padding: 10px;
+            border: none;
+            background-color: #333;
+            color: #fff;
+            margin-bottom: 10px;
+            width: 300px;
+            font-size: 16px;
+            border-radius: 4px;
+        }
+
+        input[type="text"]::placeholder {
+            color: #aaa;
+        }
+
+        button[type="submit"] {
+            padding: 10px 20px;
+            background-color: #3897f0;
+            color: #fff;
+            border: none;
+            font-size: 16px;
+            cursor: pointer;
+            border-radius: 4px;
+        }
+
+        button[type="submit"]:hover {
+            background-color: #2a77d2;
+        }
+    </style>
+</head>
+
+<body>
+    <h1>Enter Threads.net Post URL</h1>
+    <form action="/media" method="POST">
+        <input type="text" name="url" placeholder="Threads.net Post URL" required>
+        <button type="submit">Get Media</button>
+    </form>
+</body>
+
+</html>
