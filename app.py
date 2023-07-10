@@ -29,7 +29,7 @@ def get_all_media():
     thread_items = post_data.get("data", {}).get("data", {}).get("containing_thread", {}).get("thread_items", [])
     all_media = get_media(thread_items[-1])
 
-    shortened_url = shorten_url(url)
+    shortened_url = shorten_url(all_media.get('media'))
     if shortened_url:
         all_media['shortened_url'] = shortened_url
 
