@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>JSON Viewer</title>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <style>
+        body {
+            background-color: #333;
+            color: #fff;
+        }
+
+        .container {
+            background-color: #222;
+            padding: 20px;
+            margin-top: 50px;
+            border-radius: 5px;
+        }
+
+        .json-key {
+            font-weight: bold;
+            color: #2a77d2;
+        }
+
+        .json-value {
+            margin-left: 20px;
+        }
+
+        .json-toggle {
+            cursor: pointer;
+            color: #2a77d2;
+        }
+
+        .json-collapsed {
+            display: none;
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="container">
+        <h1>API RESPONSE</h1>
+        <hr>
+
+        <div id="json-container"></div>
+    </div>
+
+    <script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
+    <script>
+        // Replace 'json' with your JSON object
+        var json = {{ json_data| tojson }};
+
+
+        // Create the HTML structure for the JSON object
+        function createJsonHtml(obj, parentElement) {
+            var objectType = typeof obj;
+            var isArray = Array.isArray(obj);
+
+            var ul = $('<ul>').addClass(isArray ? 'json-array' : 'json-object');
+            $.each(obj, function (key, value) {
+                var li = $('<li>');
+                var keyElement = $('<span>').addClass('json-key').text(key);
+                var valueElement;
+
+                if (typeof value === 'object' && value !== null) {
+                    var toggleElement = $('<span>').addClass('json-toggle').text('▶');
+                    keyElement.prepend(toggleElement);
+                    valueElement = $('<div>').addClass('json-value json-collapsed');
+                    createJsonHtml(value, valueElement);
+                } else {
+                    valueElement = $('<span>').addClass('json-value').text(value);
+                }
+
+                li.append(keyElement).append(': ').append(valueElement);
+                ul.append(li);
+            });
+
+            parentElement.append(ul);
+        }
+
+        // Toggle the visibility of nested objects/arrays
+        $(document).on('click', '.json-toggle', function () {
+            $(this).text(function (index, text) {
+                return text === '▶' ? '▼' : '▶';
+            });
+
+            $(this).closest('li').children('.json-value').toggleClass('json-collapsed');
+        });
+
+        // Display the JSON data in the container
+        $(document).ready(function () {
+            var jsonContainer = $('#json-container');
+            createJsonHtml(json, jsonContainer);
+        });
+    </script>
+
+</body>
+
+</html>

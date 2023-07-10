@@ -1,12 +1,23 @@
-import requests
+import requests as req
+from requests.auth import HTTPProxyAuth
 from flask import Flask, request, jsonify, render_template
 import re
 import json
 
 app = Flask(__name__)
 
+# proxt support
+session = req.Session()
+proxy_url='http://username:password@proxyurl:port'
+session.proxies = {'http': proxy_url,
+                   'https': proxy_url}
+session.auth=HTTPProxyAuth('reds87640erov220845', 'fNSbFm9zjQgeaT2J')
+requests=session
+
 def shorten_url(long_url):
-    response = requests.get(f'http://tinyurl.com/api-create.php?url={long_url}')
+    #saving bandwidth on proxy 
+    response = req.get(f'http://tinyurl.com/api-create.php?url={long_url}')
+    print(response.status_code)
     if response.status_code == 200:
         return response.text
     return None
@@ -14,6 +25,32 @@ def shorten_url(long_url):
 @app.route('/', methods=['GET'])
 def index():
     return render_template('index.html')
+
+# @app.route("/json")
+# def json_example():
+#     return render_template("json_viewer.html")
+
+@app.route('/mediajson', methods=['POST'])
+def get_all_media_json():
+    url = request.form.get('url')
+    if not url:
+        return jsonify({'error': 'URL parameter is missing'}), 400
+
+    post_id = get_post_id(url)
+    if post_id is None:
+        return jsonify({'error': 'Invalid URL or post ID not found'}), 400
+
+    post_data = get_post_data(post_id)
+    thread_items = post_data.get("data", {}).get("data", {}).get("containing_thread", {}).get("thread_items", [])
+    all_media = get_media(thread_items[-1])
+
+    shortened_url = shorten_url(all_media.get('media'))
+    print(shortened_url)
+    if shortened_url:
+        all_media['shortened_url'] = shortened_url
+
+    return render_template("json_viewer.html", json_data=all_media)
+
 
 @app.route('/media', methods=['POST'])
 def get_all_media():
@@ -30,6 +67,7 @@ def get_all_media():
     all_media = get_media(thread_items[-1])
 
     shortened_url = shorten_url(all_media.get('media'))
+    print(shortened_url)
     if shortened_url:
         all_media['shortened_url'] = shortened_url
 
@@ -87,7 +125,7 @@ def get_media(thread):
                 "user_profile_pic_url": media["user"]["profile_pic_url"],
                 "type": "videos",
                 "is_reposted": is_reposted,
-                "media": [m["video_versions"][0] for m in media["carousel_media"]],
+                "media": [m["video_versions"][0]["url"] for m in media["carousel_media"]],
                 "width": media["original_width"],
                 "height": media["original_height"]
             }
@@ -97,7 +135,7 @@ def get_media(thread):
             "user_profile_pic_url": media["user"]["profile_pic_url"],
             "caption": media["caption"]["text"] if media["caption"] else None,
             "type": "photos",
-            "media": [m["image_versions2"]["candidates"][0] for m in media["carousel_media"]],
+            "media": [m["image_versions2"]["candidates"][0]["url"] for m in media["carousel_media"]],
             "width": media["original_width"],
             "height": media["original_height"]
         }
@@ -109,7 +147,7 @@ def get_media(thread):
             "username": media["user"]["username"],
             "is_verified": media["user"]["is_verified"],
             "type": "video",
-            "media": media["video_versions"][0],
+            "media": media["video_versions"][0]["url"],
             "width": media["original_width"],
             "height": media["original_height"]
         }
