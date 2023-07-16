@@ -8,7 +8,7 @@ app = Flask(__name__)
 
 # proxt support
 session = req.Session()
-proxy_url='http://username:password@proxyurl:port'
+proxy_url = ''
 session.proxies = {'http': proxy_url,
                    'https': proxy_url}
 session.auth=HTTPProxyAuth('reds87640erov220845', 'fNSbFm9zjQgeaT2J')
@@ -44,10 +44,10 @@ def get_all_media_json():
     thread_items = post_data.get("data", {}).get("data", {}).get("containing_thread", {}).get("thread_items", [])
     all_media = get_media(thread_items[-1])
 
-    shortened_url = shorten_url(all_media.get('media'))
-    print(shortened_url)
-    if shortened_url:
-        all_media['shortened_url'] = shortened_url
+    # shortened_url = shorten_url(all_media.get('media'))
+    # # print(shortened_url)
+    # if shortened_url:
+    #     all_media['shortened_url'] = shortened_url
 
     return render_template("json_viewer.html", json_data=all_media)
 
@@ -66,10 +66,10 @@ def get_all_media():
     thread_items = post_data.get("data", {}).get("data", {}).get("containing_thread", {}).get("thread_items", [])
     all_media = get_media(thread_items[-1])
 
-    shortened_url = shorten_url(all_media.get('media'))
-    print(shortened_url)
-    if shortened_url:
-        all_media['shortened_url'] = shortened_url
+    # shortened_url = shorten_url(all_media.get('media'))
+    # print(shortened_url)
+    # if shortened_url:
+    #     all_media['shortened_url'] = shortened_url
 
     return jsonify(all_media)
 
@@ -106,15 +106,14 @@ def get_media(thread):
     media_true = thread["post"]
     media = media_true.get("text_post_app_info", {}).get("share_info", {}).get("quoted_post", None)  # quoted post
     if not media:
-        media=media_true
+        media = media_true
     else:
-        is_quoted=True
+        is_quoted = True
     media = media.get("text_post_app_info", {}).get("share_info", {}).get("reposted_post", None)  # reposted post
     if not media:
-        media=media_true
+        media = media_true
     else:
-        is_reposted=True
-    # print(media)
+        is_reposted = True
 
     if media.get("carousel_media"):
         if media["carousel_media"][0].get("video_versions"):
@@ -127,7 +126,9 @@ def get_media(thread):
                 "is_reposted": is_reposted,
                 "media": [m["video_versions"][0]["url"] for m in media["carousel_media"]],
                 "width": media["original_width"],
-                "height": media["original_height"]
+                "height": media["original_height"],
+                "direct_download": [shorten_url(m["video_versions"][0]["url"] + "&dl=1") for m in media["carousel_media"]],
+                "direct_view": [shorten_url(m["video_versions"][0]["url"] + "&dl=0") for m in media["carousel_media"]]
             }
         return {
             "username": media["user"]["username"],
@@ -137,7 +138,9 @@ def get_media(thread):
             "type": "photos",
             "media": [m["image_versions2"]["candidates"][0]["url"] for m in media["carousel_media"]],
             "width": media["original_width"],
-            "height": media["original_height"]
+            "height": media["original_height"],
+            "direct_download": [shorten_url(m["image_versions2"]["candidates"][0]["url"] + "&dl=1") for m in media["carousel_media"]],
+            "direct_view": [shorten_url(m["image_versions2"]["candidates"][0]["url"] + "&dl=0") for m in media["carousel_media"]]
         }
 
     if media.get("video_versions") and len(media["video_versions"]) > 0:
@@ -149,7 +152,9 @@ def get_media(thread):
             "type": "video",
             "media": media["video_versions"][0]["url"],
             "width": media["original_width"],
-            "height": media["original_height"]
+            "height": media["original_height"],
+            "direct_download": shorten_url(media["video_versions"][0]["url"] + "&dl=1"),
+            "direct_view": shorten_url(media["video_versions"][0]["url"] + "&dl=0")
         }
 
     return {
@@ -160,7 +165,9 @@ def get_media(thread):
         "type": "photo",
         "media": media["image_versions2"]["candidates"][0]["url"],
         "width": media["original_width"],
-        "height": media["original_height"]
+        "height": media["original_height"],
+        "direct_download": shorten_url(media["image_versions2"]["candidates"][0]["url"] + "&dl=1"),
+        "direct_view": shorten_url(media["image_versions2"]["candidates"][0]["url"] + "&dl=0")
     }
 
 if __name__ == '__main__':
